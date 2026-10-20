@@ -6,8 +6,8 @@ services:
    restart: always
    environment:
      POSTGRES_USER: postgres
-     POSTGRES_PASSWORD: benvi
-     POSTGRES_DB: benvi-db
+     POSTGRES_PASSWORD: bemvi
+     POSTGRES_DB: bemvi-db
    ports:
      - "5432:5432"
    volumes:
