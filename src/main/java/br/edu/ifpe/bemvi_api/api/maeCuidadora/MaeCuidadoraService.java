@@ -14,7 +14,7 @@ public class MaeCuidadoraService {
     }
 
     public MaeCuidadora build(MaeCuidadoraDTO dto) {
-        MaeCuidadora mae = null;
+        MaeCuidadora mae;
 
         if (dto.getId() == null) {
             mae = new MaeCuidadora();
@@ -25,8 +25,6 @@ public class MaeCuidadoraService {
         mae.setNome(dto.getNome());
         mae.setEmail(dto.getEmail());
         mae.setSenha(dto.getSenha());
-        mae.setNomeFilho(dto.getNomeFilho());
-        mae.setIdadeFilho(dto.getIdadeFilho());
         mae.setModoAnonimo(dto.getModoAnonimo() != null ? dto.getModoAnonimo() : Boolean.FALSE);
 
         return mae;

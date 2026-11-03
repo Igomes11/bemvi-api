@@ -1,15 +1,18 @@
 package br.edu.ifpe.bemvi_api.api.maeCuidadora;
 
+import java.util.List;
 import org.hibernate.annotations.SQLRestriction;
-
+import br.edu.ifpe.bemvi_api.api.filho.Filho;
 import br.edu.ifpe.bemvi_api.util.EntidadeAuditavel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
 
 @Entity
 @Table(name = "MaeCuidadora")
@@ -29,11 +32,8 @@ public class MaeCuidadora extends EntidadeAuditavel {
     @Column(nullable = false)
     private String senha;
 
-    @Column
-    private String nomeFilho;
-
-    @Column
-    private Integer idadeFilho;
+    @OneToMany(mappedBy = "mae")
+    private List<Filho> filhos;
 
     @Column
     private Boolean modoAnonimo;

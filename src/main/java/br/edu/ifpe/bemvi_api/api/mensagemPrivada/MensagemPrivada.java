@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "MensagemPrivada")
@@ -30,4 +31,7 @@ public class MensagemPrivada extends EntidadeAuditavel {
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String textoMensagem;
+
+    @Column(nullable = false)
+    private LocalDateTime dataHoraEnvio = LocalDateTime.now();
 }

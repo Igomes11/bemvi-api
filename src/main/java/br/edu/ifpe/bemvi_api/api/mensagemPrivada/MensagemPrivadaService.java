@@ -1,5 +1,6 @@
 package br.edu.ifpe.bemvi_api.api.mensagemPrivada;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadoraService;
@@ -18,7 +19,7 @@ public class MensagemPrivadaService {
     }
 
     public MensagemPrivada build(MensagemPrivadaDTO dto) {
-        MensagemPrivada mensagem = null;
+        MensagemPrivada mensagem;
 
         if (dto.getId() == null) {
             mensagem = new MensagemPrivada();
@@ -59,5 +60,9 @@ public class MensagemPrivadaService {
         MensagemPrivada mensagem = repository.findById(id).orElseThrow();
         mensagem.setHabilitado(false);
         repository.save(mensagem);
+    }
+
+        public List<MensagemPrivada> sincronizarMensagens(Long idUsuario, LocalDateTime ultimaSincronizacao) {
+        return repository.buscarMensagensNovasParaSincronizar(idUsuario, ultimaSincronizacao);
     }
 }
