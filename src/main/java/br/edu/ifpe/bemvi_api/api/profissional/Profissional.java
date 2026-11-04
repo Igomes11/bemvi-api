@@ -1,34 +1,25 @@
 package br.edu.ifpe.bemvi_api.api.profissional;
 
-import org.hibernate.annotations.SQLRestriction;
-
-import br.edu.ifpe.bemvi_api.util.EntidadeAuditavel;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import br.edu.ifpe.bemvi_api.api.categoria.Categoria;
+import br.edu.ifpe.bemvi_api.util.EntidadeNegocio;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "Profissional")
-@SQLRestriction("habilitado = true")
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-public class Profissional extends EntidadeAuditavel {
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(callSuper = true)
+public class Profissional extends EntidadeNegocio {
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false, length = 100)
-    private String especialidade;
+    private String registroProfissional;
 
-    @Column(nullable = false, length = 100)
-    private String cidade;
-
-    @Column(length = 150)
-    private String contato;
+    @ManyToOne
+    @JoinColumn(name = "categoria_especialidade_id")
+    private Categoria especialidade;
 }

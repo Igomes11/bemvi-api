@@ -15,7 +15,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "MensagemPrivada")
+@Table(name = "Mensagem_Privada")
 @SQLRestriction("habilitado = true")
 @Getter
 @Setter

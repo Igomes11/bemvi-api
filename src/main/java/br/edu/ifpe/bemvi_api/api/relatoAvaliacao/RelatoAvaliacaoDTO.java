@@ -1,7 +1,7 @@
 package br.edu.ifpe.bemvi_api.api.relatoAvaliacao;
 
+import br.edu.ifpe.bemvi_api.api.profissional.ProfissionalDTO;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,15 +13,27 @@ public class RelatoAvaliacaoDTO {
 
     private Long id;
 
-    @NotNull(message = "O ID da Mãe é de preenchimento obrigatório")
-    private Long idMae;
+    @NotBlank(message = "O comentário é obrigatório")
+    private String comentario;
 
-    @NotNull(message = "O ID do Profissional é de preenchimento obrigatório")
-    private Long idProfissional;
-
-    @NotNull(message = "A nota é de preenchimento obrigatório")
     private Integer nota;
 
-    @NotBlank(message = "O texto do relato é de preenchimento obrigatório")
-    private String textoRelato;
+    private Long profissionalId;
+    private ProfissionalDTO profissional;
+
+    private Long maeId;
+
+    public static RelatoAvaliacaoDTO toDTO(RelatoAvaliacao entity) {
+        if (entity == null) {
+            return null;
+        }
+        RelatoAvaliacaoDTO dto = new RelatoAvaliacaoDTO();
+        dto.setId(entity.getId());
+        dto.setComentario(entity.getComentario());
+        dto.setNota(entity.getNota());
+        dto.setProfissionalId(entity.getProfissional() != null ? entity.getProfissional().getId() : null);
+        dto.setProfissional(ProfissionalDTO.toDTO(entity.getProfissional()));
+        dto.setMaeId(entity.getMae() != null ? entity.getMae().getId() : null);
+        return dto;
+    }
 }

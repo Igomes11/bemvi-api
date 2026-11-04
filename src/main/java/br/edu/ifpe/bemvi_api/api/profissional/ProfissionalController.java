@@ -1,17 +1,11 @@
 package br.edu.ifpe.bemvi_api.api.profissional;
 
-import java.util.List;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/profissional")
@@ -19,29 +13,27 @@ public class ProfissionalController {
 
     private final ProfissionalService profissionalService;
 
-    public ProfissionalController(ProfissionalService service) {
-        this.profissionalService = service;
+    public ProfissionalController(ProfissionalService profissionalService) {
+        this.profissionalService = profissionalService;
     }
 
     @PostMapping
-    public ResponseEntity<Profissional> cadastrar(@RequestBody @Valid ProfissionalDTO dto) {
-        Profissional profissionalCadastrado = profissionalService.cadastrar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(profissionalCadastrado);
+    public ResponseEntity<ProfissionalDTO> cadastrar(@RequestBody @Valid ProfissionalDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(profissionalService.cadastrar(dto));
     }
 
-    @PutMapping
-    public ResponseEntity<Profissional> atualizar(@RequestBody @Valid ProfissionalDTO dto) {
-        Profissional profissionalAtualizado = profissionalService.atualizar(dto);
-        return ResponseEntity.ok(profissionalAtualizado);
+    @PutMapping("/{id}")
+    public ResponseEntity<ProfissionalDTO> atualizar(@PathVariable Long id, @RequestBody @Valid ProfissionalDTO dto) {
+        return ResponseEntity.ok(profissionalService.atualizar(id, dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<Profissional>> listar() {
+    public ResponseEntity<List<ProfissionalDTO>> listar() {
         return ResponseEntity.ok(profissionalService.listar());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Profissional> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ProfissionalDTO> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(profissionalService.buscarPorId(id));
     }
 

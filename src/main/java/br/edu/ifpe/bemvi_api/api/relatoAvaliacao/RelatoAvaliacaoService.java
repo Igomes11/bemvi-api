@@ -1,68 +1,81 @@
 package br.edu.ifpe.bemvi_api.api.relatoAvaliacao;
 
-import java.util.List;
+import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadora;
+import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadoraRepository;
+import br.edu.ifpe.bemvi_api.api.profissional.Profissional;
+import br.edu.ifpe.bemvi_api.api.profissional.ProfissionalRepository;
 import org.springframework.stereotype.Service;
-import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadoraService;
-import br.edu.ifpe.bemvi_api.api.profissional.ProfissionalService;
-import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @Service
 public class RelatoAvaliacaoService {
 
-    private final RelatoAvaliacaoRepository repository;
-    private final MaeCuidadoraService maeCuidadoraService;
-    private final ProfissionalService profissionalService;
+    private final RelatoAvaliacaoRepository relatoAvaliacaoRepository;
+    private final ProfissionalRepository profissionalRepository;
+    private final MaeCuidadoraRepository maeCuidadoraRepository;
 
-    public RelatoAvaliacaoService(RelatoAvaliacaoRepository repository, 
-                                  MaeCuidadoraService maeCuidadoraService, 
-                                  ProfissionalService profissionalService) {
-        this.repository = repository;
-        this.maeCuidadoraService = maeCuidadoraService;
-        this.profissionalService = profissionalService;
+    public RelatoAvaliacaoService(RelatoAvaliacaoRepository relatoAvaliacaoRepository,
+                                 ProfissionalRepository profissionalRepository,
+                                 MaeCuidadoraRepository maeCuidadoraRepository) {
+        this.relatoAvaliacaoRepository = relatoAvaliacaoRepository;
+        this.profissionalRepository = profissionalRepository;
+        this.maeCuidadoraRepository = maeCuidadoraRepository;
     }
 
-    public RelatoAvaliacao build(RelatoAvaliacaoDTO dto) {
-        RelatoAvaliacao relato = null;
+    public RelatoAvaliacaoDTO cadastrar(RelatoAvaliacaoDTO dto) {
+        RelatoAvaliacao relato = new RelatoAvaliacao();
+        relato.setComentario(dto.getComentario());
+        relato.setNota(dto.getNota());
 
-        if (dto.getId() == null) {
-            relato = new RelatoAvaliacao();
-        } else {
-            relato = repository.findById(dto.getId()).orElseThrow();
+        if (dto.getProfissionalId() != null) {
+            Profissional profissional = profissionalRepository.findById(dto.getProfissionalId())
+                    .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+            relato.setProfissional(profissional);
         }
 
+        if (dto.getMaeId() != null) {
+            MaeCuidadora mae = maeCuidadoraRepository.findById(dto.getMaeId())
+                    .orElseThrow(() -> new RuntimeException("Mãe não encontrada"));
+            relato.setMae(mae);
+        }
+
+        RelatoAvaliacao salvo = relatoAvaliacaoRepository.save(relato);
+        return RelatoAvaliacaoDTO.toDTO(salvo);
+    }
+
+    public RelatoAvaliacaoDTO atualizar(Long id, RelatoAvaliacaoDTO dto) {
+        RelatoAvaliacao relato = relatoAvaliacaoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Relato não encontrado"));
+
+        relato.setComentario(dto.getComentario());
         relato.setNota(dto.getNota());
-        relato.setTextoRelato(dto.getTextoRelato());
-        relato.setMae(maeCuidadoraService.buscarPorId(dto.getIdMae()));
-        relato.setProfissional(profissionalService.buscarPorId(dto.getIdProfissional()));
 
-        return relato;
+        if (dto.getProfissionalId() != null) {
+            Profissional profissional = profissionalRepository.findById(dto.getProfissionalId())
+                    .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+            relato.setProfissional(profissional);
+        } else {
+            relato.setProfissional(null);
+        }
+
+        RelatoAvaliacao atualizado = relatoAvaliacaoRepository.save(relato);
+        return RelatoAvaliacaoDTO.toDTO(atualizado);
     }
 
-    @Transactional
-    public RelatoAvaliacao cadastrar(RelatoAvaliacaoDTO dto) {
-        RelatoAvaliacao relato = build(dto);
-        relato.setHabilitado(true);
-        return repository.save(relato);
+    public List<RelatoAvaliacaoDTO> listar() {
+        return relatoAvaliacaoRepository.findAll().stream()
+                .map(RelatoAvaliacaoDTO::toDTO)
+                .toList();
     }
 
-    @Transactional
-    public RelatoAvaliacao atualizar(RelatoAvaliacaoDTO dto) {
-        RelatoAvaliacao relato = build(dto);
-        return repository.save(relato);
+    public RelatoAvaliacaoDTO buscarPorId(Long id) {
+        RelatoAvaliacao relato = relatoAvaliacaoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Relato não encontrado"));
+        return RelatoAvaliacaoDTO.toDTO(relato);
     }
 
-    public List<RelatoAvaliacao> listar() {
-        return repository.findAll();
-    }
-
-    public RelatoAvaliacao buscarPorId(Long id) {
-        return repository.findById(id).orElseThrow();
-    }
-
-    @Transactional
     public void remover(Long id) {
-        RelatoAvaliacao relato = repository.findById(id).orElseThrow();
-        relato.setHabilitado(false);
-        repository.save(relato);
+        relatoAvaliacaoRepository.deleteById(id);
     }
 }

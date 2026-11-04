@@ -1,60 +1,71 @@
 package br.edu.ifpe.bemvi_api.api.profissional;
 
-import java.util.List;
+import br.edu.ifpe.bemvi_api.api.categoria.Categoria;
+import br.edu.ifpe.bemvi_api.api.categoria.CategoriaRepository;
 import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @Service
 public class ProfissionalService {
 
-    private final ProfissionalRepository repository;
+    private final ProfissionalRepository profissionalRepository;
+    private final CategoriaRepository categoriaRepository;
 
-    public ProfissionalService(ProfissionalRepository repository) {
-        this.repository = repository;
+    public ProfissionalService(ProfissionalRepository profissionalRepository,
+                               CategoriaRepository categoriaRepository) {
+        this.profissionalRepository = profissionalRepository;
+        this.categoriaRepository = categoriaRepository;
     }
 
-    public Profissional build(ProfissionalDTO dto) {
-        Profissional profissional = null;
+    public ProfissionalDTO cadastrar(ProfissionalDTO dto) {
+        Profissional profissional = Profissional.builder()
+                .nome(dto.getNome())
+                .registroProfissional(dto.getRegistroProfissional())
+                .build();
 
-        if (dto.getId() == null) {
-            profissional = new Profissional();
-        } else {
-            profissional = repository.findById(dto.getId()).orElseThrow();
+        if (dto.getEspecialidadeId() != null) {
+            Categoria especialidade = categoriaRepository.findById(dto.getEspecialidadeId())
+                    .orElseThrow(() -> new RuntimeException("Categoria de especialidade não encontrada"));
+            profissional.setEspecialidade(especialidade);
         }
 
+        Profissional salvo = profissionalRepository.save(profissional);
+        return ProfissionalDTO.toDTO(salvo);
+    }
+
+    public ProfissionalDTO atualizar(Long id, ProfissionalDTO dto) {
+        Profissional profissional = profissionalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+
         profissional.setNome(dto.getNome());
-        profissional.setEspecialidade(dto.getEspecialidade());
-        profissional.setCidade(dto.getCidade());
-        profissional.setContato(dto.getContato());
+        profissional.setRegistroProfissional(dto.getRegistroProfissional());
 
-        return profissional;
+        if (dto.getEspecialidadeId() != null) {
+            Categoria especialidade = categoriaRepository.findById(dto.getEspecialidadeId())
+                    .orElseThrow(() -> new RuntimeException("Categoria de especialidade não encontrada"));
+            profissional.setEspecialidade(especialidade);
+        } else {
+            profissional.setEspecialidade(null);
+        }
+
+        Profissional atualizado = profissionalRepository.save(profissional);
+        return ProfissionalDTO.toDTO(atualizado);
     }
 
-    @Transactional
-    public Profissional cadastrar(ProfissionalDTO dto) {
-        Profissional profissional = build(dto);
-        profissional.setHabilitado(true);
-        return repository.save(profissional);
+    public List<ProfissionalDTO> listar() {
+        return profissionalRepository.findAll().stream()
+                .map(ProfissionalDTO::toDTO)
+                .toList();
     }
 
-    @Transactional
-    public Profissional atualizar(ProfissionalDTO dto) {
-        Profissional profissional = build(dto);
-        return repository.save(profissional);
+    public ProfissionalDTO buscarPorId(Long id) {
+        Profissional profissional = profissionalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+        return ProfissionalDTO.toDTO(profissional);
     }
 
-    public List<Profissional> listar() {
-        return repository.findAll();
-    }
-
-    public Profissional buscarPorId(Long id) {
-        return repository.findById(id).orElseThrow();
-    }
-
-    @Transactional
     public void remover(Long id) {
-        Profissional profissional = repository.findById(id).orElseThrow();
-        profissional.setHabilitado(false);
-        repository.save(profissional);
+        profissionalRepository.deleteById(id);
     }
 }

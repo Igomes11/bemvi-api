@@ -1,63 +1,88 @@
 package br.edu.ifpe.bemvi_api.api.filho;
 
-import java.util.List;
+import br.edu.ifpe.bemvi_api.api.categoria.Categoria;
+import br.edu.ifpe.bemvi_api.api.categoria.CategoriaRepository;
+import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadora;
+import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadoraRepository;
 import org.springframework.stereotype.Service;
-import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadoraService;
-import jakarta.transaction.Transactional;
+
+import java.util.List;
 
 @Service
 public class FilhoService {
 
-    private final FilhoRepository repository;
-    private final MaeCuidadoraService maeCuidadoraService;
+    private final FilhoRepository filhoRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final MaeCuidadoraRepository maeCuidadoraRepository;
 
-    public FilhoService(FilhoRepository repository, MaeCuidadoraService maeCuidadoraService) {
-        this.repository = repository;
-        this.maeCuidadoraService = maeCuidadoraService;
+    public FilhoService(FilhoRepository filhoRepository, 
+                       CategoriaRepository categoriaRepository,
+                       MaeCuidadoraRepository maeCuidadoraRepository) {
+        this.filhoRepository = filhoRepository;
+        this.categoriaRepository = categoriaRepository;
+        this.maeCuidadoraRepository = maeCuidadoraRepository;
     }
 
-    public Filho build(FilhoDTO dto) {
-        Filho filho = (dto.getId() == null) 
-                ? new Filho() 
-                : repository.findById(dto.getId()).orElseThrow();
+    public FilhoDTO cadastrar(FilhoDTO dto) {
+        Filho filho = Filho.builder()
+                .nome(dto.getNome())
+                .idade(dto.getIdade())
+                .build();
+
+        if (dto.getDiagnosticoId() != null) {
+            Categoria diagnostico = categoriaRepository.findById(dto.getDiagnosticoId())
+                    .orElseThrow(() -> new RuntimeException("Categoria de diagnóstico não encontrada"));
+            filho.setDiagnostico(diagnostico);
+        }
+
+        if (dto.getMaeId() != null) {
+            MaeCuidadora mae = maeCuidadoraRepository.findById(dto.getMaeId())
+                    .orElseThrow(() -> new RuntimeException("Mãe não encontrada"));
+            filho.setMae(mae);
+        }
+
+        Filho salvo = filhoRepository.save(filho);
+        return FilhoDTO.toDTO(salvo);
+    }
+
+    public FilhoDTO atualizar(Long id, FilhoDTO dto) {
+        Filho filho = filhoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Filho não encontrado"));
 
         filho.setNome(dto.getNome());
         filho.setIdade(dto.getIdade());
-        filho.setDiagnostico(dto.getDiagnostico());
-        filho.setMae(maeCuidadoraService.buscarPorId(dto.getIdMae()));
 
-        return filho;
+        if (dto.getDiagnosticoId() != null) {
+            Categoria diagnostico = categoriaRepository.findById(dto.getDiagnosticoId())
+                    .orElseThrow(() -> new RuntimeException("Categoria de diagnóstico não encontrada"));
+            filho.setDiagnostico(diagnostico);
+        } else {
+            filho.setDiagnostico(null);
+        }
+
+        Filho atualizado = filhoRepository.save(filho);
+        return FilhoDTO.toDTO(atualizado);
     }
 
-    @Transactional
-    public Filho cadastrar(FilhoDTO dto) {
-        Filho filho = build(dto);
-        filho.setHabilitado(true);
-        return repository.save(filho);
+    public List<FilhoDTO> listar() {
+        return filhoRepository.findAll().stream()
+                .map(FilhoDTO::toDTO)
+                .toList();
     }
 
-    @Transactional
-    public Filho atualizar(FilhoDTO dto) {
-        Filho filho = build(dto);
-        return repository.save(filho);
+    public List<FilhoDTO> listarPorMae(Long maeId) {
+        return filhoRepository.findByMaeId(maeId).stream()
+                .map(FilhoDTO::toDTO)
+                .toList();
     }
 
-    public List<Filho> listar() {
-        return repository.findAll();
+    public FilhoDTO buscarPorId(Long id) {
+        Filho filho = filhoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Filho não encontrado"));
+        return FilhoDTO.toDTO(filho);
     }
 
-    public List<Filho> listarPorMae(Long idMae) {
-        return repository.findByMaeId(idMae);
-    }
-
-    public Filho buscarPorId(Long id) {
-        return repository.findById(id).orElseThrow();
-    }
-
-    @Transactional
     public void remover(Long id) {
-        Filho filho = repository.findById(id).orElseThrow();
-        filho.setHabilitado(false);
-        repository.save(filho);
+        filhoRepository.deleteById(id);
     }
 }

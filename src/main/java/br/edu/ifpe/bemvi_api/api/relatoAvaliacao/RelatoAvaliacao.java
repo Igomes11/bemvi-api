@@ -1,37 +1,36 @@
 package br.edu.ifpe.bemvi_api.api.relatoAvaliacao;
 
-import org.hibernate.annotations.SQLRestriction;
-
 import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadora;
 import br.edu.ifpe.bemvi_api.api.profissional.Profissional;
 import br.edu.ifpe.bemvi_api.util.EntidadeAuditavel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
-@Table(name = "RelatoAvaliacao")
-@SQLRestriction("habilitado = true")
-@Getter
-@Setter
-@AllArgsConstructor
+@Table(name = "Relato_Avaliacao")
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class RelatoAvaliacao extends EntidadeAuditavel {
 
-    @ManyToOne
-    private MaeCuidadora mae;
+    @Column(nullable = false, length = 1000)
+    private String comentario;
 
-    @ManyToOne
-    private Profissional profissional;
-
-    @Column
     private Integer nota;
 
-    @Column(columnDefinition = "TEXT")
-    private String textoRelato;
+    @ManyToOne
+    @JoinColumn(name = "profissional_id")
+    private Profissional profissional;
+
+    @ManyToOne
+    @JoinColumn(name = "mae_id")
+    private MaeCuidadora mae;
 }
