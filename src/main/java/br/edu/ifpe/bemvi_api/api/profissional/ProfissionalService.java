@@ -1,71 +1,81 @@
 package br.edu.ifpe.bemvi_api.api.profissional;
 
-import br.edu.ifpe.bemvi_api.api.categoria.Categoria;
-import br.edu.ifpe.bemvi_api.api.categoria.CategoriaRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import br.edu.ifpe.bemvi_api.api.condicao.Condicao;
+import br.edu.ifpe.bemvi_api.api.condicao.CondicaoRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class ProfissionalService {
 
-    private final ProfissionalRepository profissionalRepository;
-    private final CategoriaRepository categoriaRepository;
+    @Autowired
+    private ProfissionalRepository profissionalRepository;
 
-    public ProfissionalService(ProfissionalRepository profissionalRepository,
-                               CategoriaRepository categoriaRepository) {
-        this.profissionalRepository = profissionalRepository;
-        this.categoriaRepository = categoriaRepository;
-    }
+    @Autowired
+    private CondicaoRepository condicaoRepository;
 
+    @Transactional
     public ProfissionalDTO cadastrar(ProfissionalDTO dto) {
-        Profissional profissional = Profissional.builder()
-                .nome(dto.getNome())
-                .registroProfissional(dto.getRegistroProfissional())
-                .build();
+        List<Condicao> condicoes = condicaoRepository.findAllById(dto.getCondicoesIds());
 
-        if (dto.getEspecialidadeId() != null) {
-            Categoria especialidade = categoriaRepository.findById(dto.getEspecialidadeId())
-                    .orElseThrow(() -> new RuntimeException("Categoria de especialidade não encontrada"));
-            profissional.setEspecialidade(especialidade);
-        }
-
-        Profissional salvo = profissionalRepository.save(profissional);
-        return ProfissionalDTO.toDTO(salvo);
-    }
-
-    public ProfissionalDTO atualizar(Long id, ProfissionalDTO dto) {
-        Profissional profissional = profissionalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
-
+        Profissional profissional = new Profissional();
         profissional.setNome(dto.getNome());
         profissional.setRegistroProfissional(dto.getRegistroProfissional());
+        profissional.setCondicoes(condicoes);
 
-        if (dto.getEspecialidadeId() != null) {
-            Categoria especialidade = categoriaRepository.findById(dto.getEspecialidadeId())
-                    .orElseThrow(() -> new RuntimeException("Categoria de especialidade não encontrada"));
-            profissional.setEspecialidade(especialidade);
-        } else {
-            profissional.setEspecialidade(null);
-        }
-
-        Profissional atualizado = profissionalRepository.save(profissional);
-        return ProfissionalDTO.toDTO(atualizado);
+        profissional = profissionalRepository.save(profissional);
+        return new ProfissionalDTO(profissional);
     }
 
     public List<ProfissionalDTO> listar() {
         return profissionalRepository.findAll().stream()
-                .map(ProfissionalDTO::toDTO)
-                .toList();
+                .map(ProfissionalDTO::new)
+                .collect(Collectors.toList());
     }
 
     public ProfissionalDTO buscarPorId(Long id) {
         Profissional profissional = profissionalRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
-        return ProfissionalDTO.toDTO(profissional);
+                .orElseThrow(() -> new EntityNotFoundException("Profissional não encontrado com id: " + id));
+        return new ProfissionalDTO(profissional);
     }
 
+    public List<ProfissionalDTO> buscarPorCondicao(Long condicaoId) {
+        return profissionalRepository.findByCondicoesId(condicaoId).stream()
+                .map(ProfissionalDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProfissionalDTO> buscarCompativeisComFilho(Long filhoId) {
+        return profissionalRepository.findProfissionaisCompativeisComFilho(filhoId).stream()
+                .map(ProfissionalDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ProfissionalDTO atualizar(Long id, ProfissionalDTO dto) {
+        Profissional profissional = profissionalRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Profissional não encontrado com id: " + id));
+
+        List<Condicao> condicoes = condicaoRepository.findAllById(dto.getCondicoesIds());
+
+        profissional.setNome(dto.getNome());
+        profissional.setRegistroProfissional(dto.getRegistroProfissional());
+        profissional.setCondicoes(condicoes);
+
+        profissional = profissionalRepository.save(profissional);
+        return new ProfissionalDTO(profissional);
+    }
+
+    @Transactional
     public void remover(Long id) {
-        profissionalRepository.deleteById(id);
+        Profissional profissional = profissionalRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Profissional não encontrado com id: " + id));
+        profissionalRepository.delete(profissional);
     }
 }

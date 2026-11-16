@@ -1,33 +1,48 @@
 package br.edu.ifpe.bemvi_api.api.filho;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import java.util.ArrayList;
+import java.util.List;
 
-import br.edu.ifpe.bemvi_api.api.categoria.Categoria;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import br.edu.ifpe.bemvi_api.api.condicao.Condicao;
 import br.edu.ifpe.bemvi_api.api.maeCuidadora.MaeCuidadora;
-import br.edu.ifpe.bemvi_api.util.EntidadeNegocio;
-import jakarta.persistence.*;
-import lombok.*;
+import br.edu.ifpe.bemvi_api.util.EntidadeAuditavel;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 
 @Entity
-@Table(name = "Filho")
-@Data
+@Table(name = "filho")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
-public class Filho extends EntidadeNegocio {
+public class Filho extends EntidadeAuditavel {
 
     @Column(nullable = false)
-    private String nome;
-
     private Integer idade;
 
-    @ManyToOne
-    @JoinColumn(name = "categoria_diagnostico_id")
-    private Categoria diagnostico;
-
-    @ManyToOne
-    @JoinColumn(name = "mae_id")
-    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mae_id", nullable = false)
+    @JsonIgnoreProperties({"filhos", "hibernateLazyInitializer", "handler"})
     private MaeCuidadora mae;
+
+    @ManyToMany
+    @JoinTable(
+        name = "filho_condicao",
+        joinColumns = @JoinColumn(name = "filho_id"),
+        inverseJoinColumns = @JoinColumn(name = "condicao_id")
+    )
+    private List<Condicao> condicoes = new ArrayList<>();
 }
